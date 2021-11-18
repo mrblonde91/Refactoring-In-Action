@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <RootNamespace>Refactored.To.FSharp</RootNamespace>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <WarnOn>3390;$(WarnOn)</WarnOn>
+        <Configurations>Debug;Release;</Configurations>
+        <Platforms>AnyCPU</Platforms>
+        <AssemblyName>Refactored.To.FSharp</AssemblyName>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="StringModule.fs" />
+        <Compile Include="GenreV2.fs" />
+        <Compile Include="BookV2.fs" />
+        <Compile Include="Library.fs" />
+    </ItemGroup>
+
+</Project>
