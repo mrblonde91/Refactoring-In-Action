@@ -135,7 +135,7 @@ As this all comes together, we end up with the following mapper.
             Rating = rating
         }
 
-It's much more simple and self explanatory than what we'd end up with in C# however there is an additional benefit which can be illustrated with the creation of a record in C#
+It's much more simple and self explanatory than what we'd end up with in C# however there is an additional benefit which can be illustrated with the creation of a record in C#.
 
 ### C# Gone Wrong
 
