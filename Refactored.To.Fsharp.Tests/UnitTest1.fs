@@ -61,8 +61,17 @@ let IsbnIsLengthThirteenThenValidates () =
     Assert.AreEqual(isbn, validatedIsbn)
     
 [<Test>]
-let IsbnHasNoDashesButValidThenValidatesSuccesfully () =
+let IsbnHasNoDashesButValidThenValidatesSuccessfully () =
     let isbn = "1402894627222"
     let validatedIsbn =StringModule.validateIsbn(isbn)
     
     Assert.AreEqual(isbn, validatedIsbn)
+    
+[<Test>]
+let UpdateNextInSeriesSuccesfullyUpdates () =
+    let expectedValues = {| ExpectedName = "Harry Potter"; ExpectedAuthor = "Rowling"; ExpectedPageCount = 24; ExpectedPublisher = "Puffin";
+                         ExpectedGenres = [GenreV2.Biography]; ExpectedIsbn = "1-4028-9462-7"; ExpectedNextInSeries = "Kill Bill" |}
+    let res = BookMapper.mapBook(expectedValues.ExpectedName, expectedValues.ExpectedAuthor, expectedValues.ExpectedIsbn,
+                                 expectedValues.ExpectedPageCount, expectedValues.ExpectedPublisher, [GenreV2.Biography], None, None)
+    let updatedModel = BookMapper.updateNextInSeries res "Kill Bill"
+    Assert.AreEqual(expectedValues.ExpectedNextInSeries, updatedModel.NextInSeries.Value)

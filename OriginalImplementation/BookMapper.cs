@@ -9,8 +9,7 @@ namespace OriginalImplementation
         public Book Map(string isbn, string name, string author, int pageCount, string publisher,
             Genre[] genre, int? rating, string nextInSeries)
         {
-            //Add isbn validation
-            if (string.IsNullOrWhiteSpace(isbn))
+            if (!ValidateIsbn(isbn))
             {
                 throw new ArgumentException("Invalid isbn used");
             }
@@ -46,6 +45,21 @@ namespace OriginalImplementation
                 Rating = rating,
                 NextInSeries = nextInSeries
             };
+        }
+
+        public Book UpdateNextInSeries(Book originalBook, string nextInSeries)
+        {
+            return originalBook with {NextInSeries = nextInSeries};
+        }
+        
+        private bool ValidateIsbn(string isbn)
+        {
+            if (string.IsNullOrWhiteSpace(isbn))
+            {
+                throw new ArgumentException("Isbn must be populated");
+            }
+            var strippedIsbn = isbn.Replace("-", "");
+            return isbn.Length == 13 || isbn.Length == 10;
         }
     }
 }

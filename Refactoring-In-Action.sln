@@ -8,6 +8,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Refactored-To-FSharp", "Ref
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Refactored.To.Fsharp.Tests", "Refactored.To.Fsharp.Tests\Refactored.To.Fsharp.Tests.fsproj", "{2EED5B2B-4C1B-46FE-A9EE-D99CFBF040AA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OriginalImplementationTests", "OriginalImplementationTests\OriginalImplementationTests.csproj", "{83D784A1-3CB9-4919-B54C-5A3857B2E6EA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		|Any CPU = |Any CPU
@@ -21,5 +23,7 @@ Global
 		{9EEF3302-764B-4125-ADEA-60AE14C17C3E}.|Any CPU.Build.0 = |Any CPU
 		{2EED5B2B-4C1B-46FE-A9EE-D99CFBF040AA}.|Any CPU.ActiveCfg = Debug|Any CPU
 		{2EED5B2B-4C1B-46FE-A9EE-D99CFBF040AA}.|Any CPU.Build.0 = Debug|Any CPU
+		{83D784A1-3CB9-4919-B54C-5A3857B2E6EA}.|Any CPU.ActiveCfg = Debug|Any CPU
+		{83D784A1-3CB9-4919-B54C-5A3857B2E6EA}.|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 EndGlobal
