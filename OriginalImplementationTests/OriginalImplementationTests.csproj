@@ -15,6 +15,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\OriginalImplementation\OriginalImplementation.csproj" />
+      <ProjectReference Include="..\Refactored-To-FSharp\Refactored-To-FSharp.fsproj" />
     </ItemGroup>
 
 </Project>

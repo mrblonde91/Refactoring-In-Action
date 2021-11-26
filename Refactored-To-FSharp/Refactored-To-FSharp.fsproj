@@ -15,6 +15,7 @@
         <Compile Include="GenreV2.fs" />
         <Compile Include="BookV2.fs" />
         <Compile Include="Library.fs" />
+        <Compile Include="PublisherV2.fs" />
     </ItemGroup>
 
 </Project>
