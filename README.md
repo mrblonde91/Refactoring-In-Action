@@ -21,7 +21,7 @@ Records are effectively the F# equivalent of a class except they are immutable. 
         public int? Rating { get; init; }
     }
 
-The key difference between a class and a record and a class in terms of defining them is the use of `record` instead of `class`. And the introduction of `init` in addition to standard getters and setters. The init prevents the modification of a field after the creation of a record. 
+The key difference between a class and a record in terms of defining them is the use of `record` instead of `class`. And the introduction of `init` in addition to standard getters and setters. The init prevents the modification of a field after the creation of a record. 
 
 ##### F# Record
 
@@ -37,7 +37,7 @@ The key difference between a class and a record and a class in terms of defining
         Rating: Option<int>
     }
 
-The F# equivalent record has slight different. The composition being the first example, there's less boilerplate. The other most apparent one here is the use of options. This is similar to a nullable value, if null the type will be `None` and if populated it will be `Some` with the value inside it. This allows for easy checks on if a value is entirely missing and allows for simply representations of optional values.
+The F# equivalent record has a few slight differences. The composition being the first example, there's less boilerplate. The other most apparent one here is the use of the `Option` keyword. This is similar to a nullable value, if null the type will be `None` and if populated it will be `Some` with the value inside it. This allows for easy checks on if a value is entirely missing and allows for simply representations of optional values.
 
 #### Updating a record
 
@@ -59,10 +59,10 @@ In this example, I have simply updated a single field in the book but I haven't 
             originalBook with NextInSeries = Some(nextInSeries)
         }
 
-The two parameters in this case are put in two separate pairs of brackets and the return type is after the colon. But as mentioned previously, the syntax is surprisingly similar to C# 9.0 variant with the omission of braces after the with and treating the string as an option.
+The two parameters in this case are put in two separate pairs of brackets and the return type is after the colon. But as mentioned previously, the syntax is surprisingly similar to C# 9.0 variant with the omission of braces after the `with` and treating the string as an `Option`.
 
 ## Validation
-Validation can be handled in many ways in the dotnet world however the cleanest ways to achieve it often requires custom validation of some kind. Constructor level checks is one of the potential approaches. For the example, I've simply utilised a mapping class.
+Validation can be handled in many ways in the dotnet world however the cleanest ways to achieve it often requires custom validation of some kind. Constructor level checks are one of the potential approaches. For the example, I've simply utilised a mapping class.
 
 
 #### C# example
