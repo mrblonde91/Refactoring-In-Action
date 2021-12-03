@@ -3,8 +3,7 @@ using Microsoft.FSharp.Collections;
 using NUnit.Framework;
 using OriginalImplementation;
 using Refactored_To_FSharp;
-using Refactored.To.FSharp;
-using FSharp = Refactored.To.FSharp;
+using blah = Refactored.To.FSharp;
 
 namespace OriginalImplementationTests
 {
@@ -19,11 +18,15 @@ namespace OriginalImplementationTests
             };
             //FSharp Implementation Won't build if missing parameters
             //var fsharp = new BookV2 { };
-            var publisherV2 = new FSharp.PublisherV2()
+            var publisherV2 = new blah.PublisherV2()
             {
 
             };
             publisherV2.Founder = "2";
         }
+    }
+
+    public class Publishe
+    {
     }
 }

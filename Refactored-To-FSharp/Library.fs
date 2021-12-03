@@ -8,14 +8,14 @@ module BookMapper =
                 pageCount: int, publisher: string,
                 genres: List<GenreV2>, rating: Option<int>, nextInSeries: Option<string>): BookV2  =
         {
-            Author = StringModule.tryCreateString author
-            Name = StringModule.tryCreateString name
+            Author = StringModule.validateString author
+            Name = StringModule.validateString name
             Isbn = StringModule.validateIsbn isbn
             PageCount =
                         match pageCount with
                         | GreaterThanZero -> pageCount
                         | _ -> raise (ArgumentException( "Must be greater than 0 pages"))
-            Publisher = StringModule.tryCreateString publisher
+            Publisher = StringModule.validateString publisher
             Genre = genres
             NextInSeries = nextInSeries
             Rating = rating
