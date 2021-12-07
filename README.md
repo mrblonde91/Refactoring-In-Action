@@ -10,7 +10,7 @@
     + [C# Gone Wrong](#c--gone-wrong)
     + [F# Gotchas](#f--gotchas)
   * [Conclusion](#conclusion)
-  
+
 # Refactoring C# to F# in Action
 
 ## Introduction
@@ -129,7 +129,7 @@ So in this case we take advantage of a match condition which allows for pattern 
 
 Another example of the use of it is for the page count and verifying the page count is greater than zero. We can use a match for a more concise and clear representation of the validation in F#.  
 
-### F# example
+#### F# example
     let (|GreaterThanZero|_|) a = if a > 0 then Some() else None
     ...
     PageCount =
