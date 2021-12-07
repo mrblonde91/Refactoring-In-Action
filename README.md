@@ -1,29 +1,5 @@
 # Refactoring C# to F# in Action
 
-- [Refactoring C# to F# in Action](#refactoring-c--to-f--in-action)
-  * [Introduction](#introduction)
-  * [Records](#records)
-        * [C# Record](#c--record)
-        * [F# Record](#f--record)
-      - [Updating a record](#updating-a-record)
-        * [C# implementation](#c--implementation)
-        * [F# implementation](#f--implementation)
-  * [Validation](#validation)
-    + [C# example](#c--example)
-    + [F# example](#f--example)
-    + [C# example](#c--example-1)
-    + [F# example](#f--example-1)
-    + [F# example](#f--example-2)
-  * [Business logic](#business-logic)
-    + [C# Example](#c--example)
-    + [F# Example](#f--example)
-  * [Pitfalls on both sides](#pitfalls-on-both-sides)
-    + [C# Gone Wrong](#c--gone-wrong)
-    + [F# Gotchas](#f--gotchas)
-      - [Immutability?](#immutability-)
-      - [Learning curve and adoption](#learning-curve-and-adoption)
-  * [Conclusion](#conclusion)
-
 ## Introduction
 As part of this demonstration of refactoring C# to F#, I've decided to utilise C# 9.0 functionality. This illustrates how C# continues to adopt F# functionality and much of the time the code is almost indistinguishable from the F# variant. However during my time experimenting with C# 9.0, pitfalls became pretty apparent. C# 9.0 simply isn't supported on many legacy projects so a shared library for example is not necessarily achievable with it. Meanwhile F# is backward compatible, you might not always get the latest and greatest features if supporting particularly old .Net Framework projects however it is possible to get a nice balance.
 
@@ -31,6 +7,7 @@ At times, there were issues around F# where things didn't behave as we expected.
 
 ## Records
 Records are effectively the F# equivalent of a class except they are immutable. C# 9.0 also introduced immutable records.
+
 ##### C# Record
 
     public record Book
@@ -91,8 +68,8 @@ The two parameters in this case are put in two separate pairs of brackets and th
 ## Validation
 Validation can be handled in many ways in the dotnet world however the cleanest ways to achieve it often requires custom validation of some kind. Constructor level checks are one of the potential approaches. For the example, I've simply utilised a mapping class.
 
-
-### C# example
+### Basic Validation
+#### C# example
 
             if (string.IsNullOrWhiteSpace(isbn))
             {
@@ -101,7 +78,7 @@ Validation can be handled in many ways in the dotnet world however the cleanest 
 
 The above is pretty much the most basic way of handling strings. It throws if it's not populated. Checks of this kind are required on each of these properties. 
 
-### F# example 
+#### F# example 
 
     let validateString candidate =
             if String.IsNullOrWhiteSpace candidate
@@ -115,16 +92,18 @@ So F# does require a slightly custom approach to verifying that a string is popu
 
 At the mapping level the function can be called to verify required strings are populated. 
 
+### Additional Validation
+
 The ISBN scenario requires some more checks. Eg it should only be 10 or 13 characters long.
 
-### C# example
+#### C# example
 
         var strippedIsbn = isbn.Replace("-", "");
         return isbn.Length == 13 || isbn.Length == 10;
 
 The null or whitespace checks are omitted but the logic is pretty self explanatory.
 
-### F# example
+#### F# example
 
     let validateIsbn(isbn: string): string =
         validateString isbn |> ignore
@@ -135,7 +114,7 @@ The null or whitespace checks are omitted but the logic is pretty self explanato
 
 So in this case we take advantage of a match condition which allows for pattern matching. So we throw in any scenario where it doesn't match 10 or 13. 
 
-Another example of the use of it is for the page count. The C# is a basic check of if it's greater than zero. We can use a match for a more concise and clear representation of the validation. 
+Another example of the use of it is for the page count and verifying the page count is greater than zero. We can use a match for a more concise and clear representation of the validation in F#.  
 
 ### F# example
     let (|GreaterThanZero|_|) a = if a > 0 then Some() else None
@@ -167,9 +146,9 @@ As this all comes together, we end up with the following mapper.
 It's much more simple and self explanatory than what we'd end up with in C# however there is an additional benefit which can be illustrated with the creation of a record in C#.
 
 ## Business logic
-Business logic is prone to being messy
+Business logic is prone to being messy, complex conditional logic and methods that grow as issues arise are standard in industry standard code. This is 
 ### C# Example
-For example if we want a method to search for books that are associated with a writer and genre. We can put together something like the below LINQ expression. It is somewhat functional and isn't very large. 
+For example if we want a method to search for books that are associated with a writer and genre. We can put together something like the below LINQ expression. It is somewhat functional and is not very large. 
 
         public IEnumerable<Book> FindBooksByGenreAndAuthor(List<Book> books, 
             string author, Genre genre)
@@ -304,4 +283,4 @@ So initially, refactoring existing code over to F# will be slower for those tran
 ## Conclusion
 This article has only really touched upon issues and approaches towards refactoring C# to F#. However it should hopefully give an idea of the immense benefits that F# offers to existing dotnet projects. Everything from LINQ to C# 9.0's records borrow heavily from functional programming in general so the huge benefit that F# offers is you are also able to offer such functionality as immutability to legacy projects that don't necessarily support C# 9.0.
 
-Interoperability can admittedly be unpredictable at times. Eg the immutability issue with CliMutable. However as demonstrated, it is reasonably straight forward to achieve it with some experimentation. With immutability, we gain  the advntage of pure code. Unexpected side effects such as our end results varying are bypassed. Plus it's incredibly concise and can easily be integrated into existing C# code. The biggest hurdle is transitioning from object oriented thinking to functional.
+Interoperability can admittedly be unpredictable at times. Eg the immutability issue with CliMutable. However as demonstrated, it is reasonably straight forward to achieve it with some experimentation. With immutability, we gain  the advntage of pure code. Unexpected side effects such as our end results varying are bypassed. Plus it's incredibly concise and can easily be integrated into existing C# code. The biggest hurdle is transitioning from object oriented thinking to functional. When closely abiding by functional principles, it is possible to write code that is clear and self explanatory.
