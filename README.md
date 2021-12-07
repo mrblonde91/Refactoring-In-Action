@@ -1,4 +1,16 @@
 # Refactoring C# to F# in Action
+- [Refactoring C# to F# in Action](#refactoring-c--to-f--in-action)
+  * [Introduction](#introduction)
+  * [Records](#records)
+      - [Updating a record](#updating-a-record)
+  * [Validation](#validation)
+    + [Basic Validation](#basic-validation)
+    + [Additional Validation](#additional-validation)
+  * [Business logic](#business-logic)
+  * [Pitfalls on both sides](#pitfalls-on-both-sides)
+    + [C# Gone Wrong](#c--gone-wrong)
+    + [F# Gotchas](#f--gotchas)
+  * [Conclusion](#conclusion)
 
 ## Introduction
 As part of this demonstration of refactoring C# to F#, I've decided to utilise C# 9.0 functionality. This illustrates how C# continues to adopt F# functionality and much of the time the code is almost indistinguishable from the F# variant. However during my time experimenting with C# 9.0, pitfalls became pretty apparent. C# 9.0 simply isn't supported on many legacy projects so a shared library for example is not necessarily achievable with it. Meanwhile F# is backward compatible, you might not always get the latest and greatest features if supporting particularly old .Net Framework projects however it is possible to get a nice balance.
