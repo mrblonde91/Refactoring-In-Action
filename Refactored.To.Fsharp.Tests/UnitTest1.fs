@@ -73,5 +73,23 @@ let UpdateNextInSeriesSuccesfullyUpdates () =
                          ExpectedGenres = [GenreV2.Biography]; ExpectedIsbn = "1-4028-9462-7"; ExpectedNextInSeries = "Kill Bill" |}
     let res = BookMapper.mapBook(expectedValues.ExpectedName, expectedValues.ExpectedAuthor, expectedValues.ExpectedIsbn,
                                  expectedValues.ExpectedPageCount, expectedValues.ExpectedPublisher, [GenreV2.Biography], None, None)
-    let updatedModel = BookMapper.updateNextInSeries res "Kill Bill"
+    let updatedModel = BookFunctions.updateNextInSeries res "Kill Bill"
     Assert.AreEqual(expectedValues.ExpectedNextInSeries, updatedModel.NextInSeries.Value)
+    
+    
+[<Test>]
+let ShouldBeAbleToFindBookByGenreAndAuthor () =
+    let expectedAuthor = "Stephen King"
+    let expectedGenre = GenreV2.Horror
+    let bookCollection = [BookMapper.mapBook("The Shining", "Stephen King", "978-3-16-148410-0",
+                                 1200, "DoubleDay", [GenreV2.Horror], None, None);
+    BookMapper.mapBook("Pet Semetary", "Stephen King", "978-3-16-148410-0",
+                                 1000, "DoubleDay", [GenreV2.Horror], None, None);
+    BookMapper.mapBook("Stand By Me", "Stephen King", "978-3-16-148410-0",
+                                 50, "DoubleDay", [GenreV2.Drama], None, None);
+    BookMapper.mapBook("Ulysses", "James Joyce", "978-3-16-148410-0",
+                                 400, "DoubleDay", [GenreV2.Drama], None, None)
+    ]
+    let result = BookFunctions.findBookByGenreAndAuthor bookCollection expectedAuthor expectedGenre
+    
+    Assert.AreEqual(2, result.Length)

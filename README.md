@@ -68,7 +68,7 @@ The two parameters in this case are put in two separate pairs of brackets and th
 Validation can be handled in many ways in the dotnet world however the cleanest ways to achieve it often requires custom validation of some kind. Constructor level checks are one of the potential approaches. For the example, I've simply utilised a mapping class.
 
 
-#### C# example
+### C# example
 
             if (string.IsNullOrWhiteSpace(isbn))
             {
@@ -77,7 +77,7 @@ Validation can be handled in many ways in the dotnet world however the cleanest 
 
 The above is pretty much the most basic way of handling strings. It throws if it's not populated. Checks of this kind are required on each of these properties. 
 
-#### F# example 
+### F# example 
 
     let validateString candidate =
             if String.IsNullOrWhiteSpace candidate
@@ -142,6 +142,55 @@ As this all comes together, we end up with the following mapper.
 
 It's much more simple and self explanatory than what we'd end up with in C# however there is an additional benefit which can be illustrated with the creation of a record in C#.
 
+## Business logic
+Business logic is prone to being messy
+### C# Example
+For example if we want a method to search for books that are associated with a writer and genre. We can put together something like the below LINQ expression. It is somewhat functional and isn't very large. 
+
+        public IEnumerable<Book> FindBooksByGenreAndAuthor(List<Book> books, 
+            string author, Genre genre)
+        {
+            return books.Where(x => x.Author.Equals(author)
+                                    && x.Genre.Equals(genre));
+        }
+
+However if we wanted to allow for searching for genre or author individually, we have to decompose this method into smaller pieces.
+
+        public IEnumerable<Book> FindBooksByAuthor(List<Book> books,
+            string author)
+        {
+            return books.Where(x => x.Author.Equals(author));
+        }
+        
+        public IEnumerable<Book> FindBooksByGenre(List<Book> books,
+             Genre genre)
+        {
+            return books.Where(x => x.Genre.Equals(genre));
+        }
+        
+        public IEnumerable<Book> FindBooksByGenreAndAuthorV2(List<Book> books,
+            string author, Genre genre)
+        {
+            var booksByAuthor = FindBooksByAuthor(books, author).ToList();
+            return FindBooksByGenre(booksByAuthor, genre);
+        }
+The resultant code is not awful to deal with however it is becoming a much lengthier piece of code just to achieve something very simple.
+
+### F# Example
+The F# equivalent manages to be far more expressive and concise. Firstly, an engineers approach in F# tends to benefit from decomposition by default, it is easier to read when you break functionality down into smaller pieces.  The syntax of the below is like a simplified version of LINQ. Each filter amounts to about 2 lines of code.
+    
+    let findBookByAuthor(books: List<BookV2>)(author: string): List<BookV2> =
+        List.filter(fun x -> x.Author.Equals(author)) books
+
+    let findBookByGenre(books: List<BookV2>)(genre: GenreV2): List<BookV2> =
+        List.filter(fun x -> List.contains(genre) x.Genre) books
+
+    let findBookByGenreAndAuthor(books:List<BookV2>) (author:string) (genre:GenreV2): List<BookV2> =
+        findBookByAuthor books author |> fun x -> findBookByGenre x genre
+
+In the case of `findBookByGenreAndAuthor`, we utilise `|>`( aka pipe forward). This introduced chained method calls and passes the result of `findBookByAuthor` into `findBookByGenre`. This sort of chaining would allow us to apply multiple sets of filters and passing the result down each time. It's not even necessary to explicitly return the result as it is assumed the last expression is the expected result.
+
+## Pitfalls on both sides
 ### C# Gone Wrong
 
             var blah = new Book
@@ -159,7 +208,9 @@ Invariably this will lead to random properties omitting the private setter out o
         mutable Rating: Option<int>
 
 ### F# Gotchas
-One issue that I have encountered as part of migrating existing code to F# is the `[<CliMutable>]` attribute. For example with dapper you need a parameterless constructor. The `CliMutable` attribute effectively does that. In F#, these records will behave in the exact same way and they will remain immutable. However what it effectively does in the background is it creates getters and setters result in mutability being introduced when it gets to the C#.
+
+#### Immutability? 
+One issue that I have encountered as part of migrating existing code to F# is the `[<CliMutable>]` attribute. For example with dapper you need a parameterless constructor. The `CliMutable` attribute effectively does that. In F#, these records will behave in the exact same way and they will remain immutable. However what it effectively does in the background is it creates getters and setters result in mutability being introduced when it gets to the C#. 
 
             var publisherV2 = new PublisherV2()
             {
@@ -167,12 +218,12 @@ One issue that I have encountered as part of migrating existing code to F# is th
             };
             publisherV2.Founder = "2";
 
+One scenario where this can pose a problem is when we are handling serialization with Dapper which requires a parameterless constructor for sql queries. It seems to be a somewhat common issue with a lot of libraries that handle serialization internally. Dapper will be used as the use case in this scenario as it is where issues surfaced for us.
+
 Four potential approaches I have considered for managing this are as follows.
 1. Maintain a DTO model and a separate one to return to C#. 
 2. Use named constructors however this is pretty time consuming
 3. Accept the loss of immutability in the likes of C#
-
-This issue unfortunately applies to many standard forms of serialization with one exception which is our fourth option.
 
 4. Handling our serialization with .Net's serialization or Newtonsoft's will allow for model's to be deserialized into an object in an immutable way.
 
@@ -209,7 +260,24 @@ A sample of the extension methods for mapping is included below.
                 new OptionConverter());
         }
 
-## Conclusion
-This article has only really touched upon issues and approaches towards refactoring C# to F#. However it should hopefully give an idea of the immense benefits that F# offers to existing dotnet projects. Everything from linq to C# 9.0's records borrow heavily from functional programming in general so the huge benefit that F# offers is you are also able to offer such functionality as immutability to legacy projects that don't necessarily support C# 9.0.
+#### Learning curve and adoption 
+A different mindset needs to be applied to F#. It is possible to write F# in a way that is almost like C#. Eg our earlier filter function for books could easily be written like the below. There is nothing hugely wrong with it however it's automatically more complex to test as the individuals pieces are combined and it loses that clear aspect of piping one result to the next, instead we are falling back on variables and it is not unusual to reference the wrong one in code, the larger the function gets. On top of that, it is entirely unnecessary to explicitly state that we are returning `bookCollection`. 
 
-Interoperability can admittedly be unpredictable at times. Eg the immutability issue with CliMutable. However as demonstrated, it is reasonably straight forward to achieve it with some experimentation. With immutability, we gain  the advntage of pure code. Unexpected side effects such as our end results varying are bypassed. Plus it's incredibly concise and can easily be integrated into existing C# code.
+    let mutable bookCollection = []
+
+    let findBookByGenreAndAuthor(books:  List<BookV2>) (author:string) (genre:GenreV2): List<BookV2> =
+        let filteredAuthors = List.filter(fun x -> x.Author.Equals(author)) books
+        bookCollection <- List.filter(fun x -> List.contains(genre) x.Genre) filteredAuthors
+        bookCollection
+
+However the most insulting part of this code is impurity. This is a somewhat stupid example but we have enabled the mutation of the `bookCollection`. The back pipe `<-` has been utilised to mutate it. However we have made the function `impure` and have potentially introduced impurity into other functions that rely on that collection. In the original version, the result of the function was always predictable, however the out of scope `bookCollection` has introduced potential side effects.
+
+A lot of issues such as the above are common sense issues and can easily be avoided by not enabling things like mutation. `Purity` is a key concept to functional programming in general, if a function receives the same argument, the result should always be predictable. Some parts of moving one's thought process from object oriented to functional concepts is a hurdle. It is possible to write F# like C# however much of time things like for loops or if-else conditions are simply unnecessary.
+
+So initially, refactoring existing code over to F# will be slower for those transitioning from object oriented design.
+
+
+## Conclusion
+This article has only really touched upon issues and approaches towards refactoring C# to F#. However it should hopefully give an idea of the immense benefits that F# offers to existing dotnet projects. Everything from LINQ to C# 9.0's records borrow heavily from functional programming in general so the huge benefit that F# offers is you are also able to offer such functionality as immutability to legacy projects that don't necessarily support C# 9.0.
+
+Interoperability can admittedly be unpredictable at times. Eg the immutability issue with CliMutable. However as demonstrated, it is reasonably straight forward to achieve it with some experimentation. With immutability, we gain  the advntage of pure code. Unexpected side effects such as our end results varying are bypassed. Plus it's incredibly concise and can easily be integrated into existing C# code. The biggest hurdle is transitioning from object oriented thinking to functional.

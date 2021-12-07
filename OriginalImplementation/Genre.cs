@@ -7,6 +7,7 @@ namespace OriginalImplementation
         Factual,
         History,
         Biography,
-        Romance
+        Romance,
+        Drama
     }
 }
