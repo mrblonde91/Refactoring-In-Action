@@ -4,10 +4,6 @@ open System
 open NUnit.Framework
 open Refactored_To_FSharp
 
-[<SetUp>]
-let Setup () =
-    ()
-
 [<Test>]
 let ModelIsValidAndReturnsSuccesfully () =
     let expectedValues = {| ExpectedName = "Harry Potter"; ExpectedAuthor = "Rowling"; ExpectedPageCount = 24; ExpectedPublisher = "Puffin";
@@ -43,30 +39,24 @@ let ThrowsExceptionIfPageCountEqualZero () =
 [<Test>]
 let ThrowsExceptionIfIsbnInvalidLength () =
     Assert.Throws<ArgumentException>(fun ()
-                                      -> StringModule.validateIsbn("1") |> ignore)
+                                      -> ValidationModule.validateIsbn("1") |> ignore)
     |> ignore
     
 [<Test>]
 let IsbnIsLengthTenThenValidates () =
     let isbn = "1-4028-9462-7"
-    let validatedIsbn =StringModule.validateIsbn(isbn)
+    ValidationModule.validateIsbn(isbn)
     
-    Assert.AreEqual(isbn, validatedIsbn)
-
 [<Test>]
 let IsbnIsLengthThirteenThenValidates () =
     let isbn = "1-4028-9462-7222"
-    let validatedIsbn =StringModule.validateIsbn(isbn)
-    
-    Assert.AreEqual(isbn, validatedIsbn)
-    
+    ValidationModule.validateIsbn(isbn)
+        
 [<Test>]
 let IsbnHasNoDashesButValidThenValidatesSuccessfully () =
     let isbn = "1402894627222"
-    let validatedIsbn =StringModule.validateIsbn(isbn)
-    
-    Assert.AreEqual(isbn, validatedIsbn)
-    
+    ValidationModule.validateIsbn(isbn)
+        
 [<Test>]
 let UpdateNextInSeriesSuccesfullyUpdates () =
     let expectedValues = {| ExpectedName = "Harry Potter"; ExpectedAuthor = "Rowling"; ExpectedPageCount = 24; ExpectedPublisher = "Puffin";

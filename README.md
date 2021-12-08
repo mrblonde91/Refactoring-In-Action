@@ -14,9 +14,11 @@
 # Refactoring C# to F# in Action
 
 ## Introduction
-As part of this demonstration of refactoring C# to F#, I've decided to utilise C# 9.0 functionality. This illustrates how C# continues to adopt F# functionality and much of the time the code is almost indistinguishable from the F# variant. However during my time experimenting with C# 9.0, pitfalls became pretty apparent. C# 9.0 simply isn't supported on many legacy projects so a shared library for example is not necessarily achievable with it. Meanwhile F# is backward compatible, you might not always get the latest and greatest features if supporting particularly old .Net Framework projects however it is possible to get a nice balance.
+As part of this demonstration of refactoring C# to F#, I've decided to utilise C# 9.0 functionality. This illustrates how C# continues to adopt F# functionality and much of the time the code is almost indistinguishable from the F# variant. However during my time experimenting with C# 9.0, pitfalls became pretty apparent. C# 9.0 simply isn't supported on many legacy projects so it is necessary to forego in the event where you need to support older projects. Meanwhile F# is backward compatible, you might not always get the latest and greatest features if supporting particularly old .Net Framework projects however it is possible to get a nice balance.
 
-At times, there were issues around F# where things didn't behave as we expected. Hopefully this piece will help other developers to bypass these issues entirely.
+The sample project I have introduced is a basic enough implementation of a Book with some functionality that allows for validation and the execution of some basic business logic. I have also included included unit tests that verify the logic.
+
+At times, there were issues around F# where things didn't behave as we expected. Hopefully this piece will help other developers to bypass these issues entirely. This acts as a follow up piece to this article on [refactoring tips](https://github.com/PiotrJustyna/articles/blob/main/refactoring-tips/index.md). 
 
 ## Records
 Records are effectively the F# equivalent of a class except they are immutable. C# 9.0 also introduced immutable records.
@@ -58,7 +60,7 @@ The F# equivalent record has a few minor differences. The composition being the 
 
 #### Updating a record
 
-The only possibly way to update an record is via `non destructive mutation`. Effectively we create a new object based upon the existing one.
+The most advisable way to update an record is via `non destructive mutation`. Effectively we create a new object based upon the existing one. The primary benefit to this is we are not introducing potentially unintended side effects and it remains easy to track when changes are occuring. On top of that, we maintain a version of each state of the record.
 
 ##### C# implementation
 
@@ -93,19 +95,18 @@ The above is pretty much the most basic way of handling strings. It throws if it
 
 #### F# example 
 
-    let validateString candidate =
+    let validateString (candidate: string) : unit =
             if String.IsNullOrWhiteSpace candidate
-            then raise (ArgumentException( "String cannot be empty"))
-            else candidate
+            then invalidArg(nameof candidate) ""
 
 So F# does require a slightly custom approach to verifying that a string is populated. In this case, I have introduced a basic null or white space check. It'll throw in the event of the value being null or whitespace.
 
-            Author = StringModule.validateString author
-            Name = StringModule.validateString name
+            Author = ValidationModule.validateString author
+            Name = ValidationModule.validateString name
 
 At the mapping level the function can be called to verify required strings are populated. 
 
-### Additional Validation
+### Mapping
 
 The ISBN scenario requires some more checks. Eg it should only be 10 or 13 characters long.
 
@@ -122,9 +123,9 @@ The null or whitespace checks are omitted but the logic is pretty self explanato
         validateString isbn |> ignore
         match (String.length (isbn.Replace("-", "")) ) with
         | 13 | 10 -> isbn
-        | _ -> raise (ArgumentException("Isbn is invalid"))
+        | _ -> invalidArg(nameof isbn) ""
 
-So in this case we take advantage of a match expression which allows for pattern matching. So we throw in any scenario where it doesn't match 10 or 13. It is a bit lengthier but it allows for far more complex branching of the conditions in a clear way. 
+So in this case we take advantage of a match expression which allows for pattern matching. So we throw in any scenario where it doesn't match 10 or 13. It is a bit lengthier but it allows for far more complex branching of the conditions in a clear way and in a scenario where we want to deal with a particular result in the same way, it's simply a matter of adding another `|` followed by the number. We can also treat different patterns differently if we want to.
 
 Another example of the use of it is for the page count and verifying the page count is greater than zero. We can use a match for a more concise and clear representation of the validation in F#.  
 
@@ -141,24 +142,26 @@ As this all comes together, we end up with the following mapper.
     let mapBook(name: string, author: string, isbn: string,
                 pageCount: int, publisher: string,
                 genres: List<GenreV2>, rating: Option<int>, nextInSeries: Option<string>): BookV2  =
+        ValidationModule.validateString author
+        ValidationModule.validateString name
+        ValidationModule.validateIsbn isbn
+        ValidationModule.validatePageCount pageCount
+        ValidationModule.validateString publisher
         {
-            Author = StringModule.validateString author
-            Name = StringModule.validateString name
-            Isbn = StringModule.validateIsbn isbn
-            PageCount =
-                        match pageCount with
-                        | GreaterThanZero -> pageCount
-                        | _ -> raise (ArgumentException( "Must be greater than 0 pages"))
-            Publisher = StringModule.validateString publisher
+            Author = author
+            Name = name
+            Isbn = isbn
+            PageCount = pageCount
+            Publisher = publisher
             Genre = genres
             NextInSeries = nextInSeries
             Rating = rating
         }
 
-It's much more simple and self explanatory than what we'd end up with in C# however there is an additional benefit which can be illustrated with the creation of a record in C#.
+It's much more simple and self explanatory than what we'd end up with in C#, validation is handled at the start of the mapper and then we can simply assign the values.
 
 ## Business logic
-Business logic is prone to being messy, complex conditional logic and methods that grow as issues arise are standard in industry standard code. This is 
+Business logic is prone to being messy, complex conditional logic and methods that grow as issues arise are standard in industry standard code. 
 ### C# Example
 For example if we want a method to search for books that are associated with a writer and genre. We can put together something like the below LINQ expression. It is somewhat functional and is not very large. 
 
@@ -174,36 +177,38 @@ However if we wanted to allow for searching for genre or author individually, we
         public IEnumerable<Book> FindBooksByAuthor(List<Book> books,
             string author)
         {
-            return books.Where(x => x.Author.Equals(author));
+            return books.Where(x => x.Author == author);
         }
-        
+
         public IEnumerable<Book> FindBooksByGenre(List<Book> books,
-             Genre genre)
+            Genre genre)
         {
-            return books.Where(x => x.Genre.Equals(genre));
+            return books.Where(x => Equals(x.Genre, genre));
         }
-        
+
         public IEnumerable<Book> FindBooksByGenreAndAuthorV2(List<Book> books,
             string author, Genre genre)
         {
             var booksByAuthor = FindBooksByAuthor(books, author).ToList();
             return FindBooksByGenre(booksByAuthor, genre);
         }
+
 The resultant code is not awful to deal with however it is becoming a much lengthier piece of code just to achieve something very simple.
 
 ### F# Example
 The F# equivalent manages to be far more expressive and concise. Firstly, an engineers approach in F# tends to benefit from decomposition by default, it is easier to read when you break functionality down into smaller pieces.  The syntax of the below is like a simplified version of LINQ. Each filter amounts to about 2 lines of code.
     
     let findBookByAuthor(books: List<BookV2>)(author: string): List<BookV2> =
-        List.filter(fun x -> x.Author.Equals(author)) books
-
-    let findBookByGenre(books: List<BookV2>)(genre: GenreV2): List<BookV2> =
-        List.filter(fun x -> List.contains(genre) x.Genre) books
-
+         List.filter(fun x -> x.Author.Equals(author)) books
+    
+    let findBookByGenre (genre: GenreV2) (books: List<BookV2>): List<BookV2> =
+         List.filter(fun x -> List.contains(genre) x.Genre) books
+         
+    // partial application
     let findBookByGenreAndAuthor(books:List<BookV2>) (author:string) (genre:GenreV2): List<BookV2> =
-        findBookByAuthor books author |> fun x -> findBookByGenre x genre
+        findBookByAuthor books author |> findBookByGenre genre
 
-In the case of `findBookByGenreAndAuthor`, we utilise `|>`( aka pipe forward). This introduced chained method calls and passes the result of `findBookByAuthor` into `findBookByGenre`. This sort of chaining would allow us to apply multiple sets of filters and passing the result down each time. It's not even necessary to explicitly return the result as it is assumed the last expression is the expected result.
+In the case of `findBookByGenreAndAuthor`, we utilise `|>`( aka pipe forward). This introduced chained method calls and passes the result of `findBookByAuthor` into `findBookByGenre`. This sort of chaining would allow us to apply multiple sets of filters and passing the result down each time. On top of that you'll noticed that we don't specify an argument for books in `findBookByGenre`. This is thanks to `partial application`, thanks the ordering of our arguments, it has inferred that the piped result is our argument for the list of books.  It's not even necessary to explicitly return the result as it is assumed the last expression is the expected result. 
 
 ## Pitfalls on both sides
 ### C# Gone Wrong
@@ -248,16 +253,17 @@ Four potential approaches I have considered for managing this are as follows.
                 JsonConvert.DeserializeObject<IEnumerable<ProductV2>>(serializeObject,
                     new OptionsConverter.OptionConverter());
 
-Performance wise, this appears to be okay, the below results are from the Benchmark dotnet with a result set of 170 unique dapper items. To get a clearer picture, the newtonsoft version is skipping the sql request, dapper handles serialization as part of the request so serialization alone can't be tested. Overall though, the performance hit is minimal and just an addition of a few milliseconds to the existing request. This [converter](https://github.com/haf/Newtonsoft.Json.FSharp) is needed to handle options in Newtonsoft.
+Performance wise, this appears to be okay, the below results are from the Benchmark dotnet with a result set of 170 unique dapper items.When we compare the dapper serialization to the newtonsoft, the difference in performance looks to be negligible.(Serialization itself for newtonsoft was around 7 milliseconds) This [converter](https://github.com/haf/Newtonsoft.Json.FSharp) is needed to handle options in Newtonsoft.
 
-|                         Method |       Mean |      Error |    StdDev |
-|------------------------------- |-----------:|-----------:|----------:|
-| RunCliMutablePureDapperVersion | 483.037 ms | 10.8998 ms | 32.138 ms |
-|           RunNewtonsoftVersion |   7.864 ms |  0.3747 ms |  1.105 ms |
+| Method | Mean | Error | StdDev |
+|------------------------------- |---------:|--------:|---------:|
+| RunCliMutablePureDapperVersion | 437.6 ms | 7.06 ms | 6.93 ms |
+| RunNewtonsoftVersion | 479.6 ms | 9.24 ms | 21.95 ms |
 
-A sample of the extension methods for mapping is included below.
+A sample of the extension methods for mapping is included below. This is in C# and allows for F# to remain immutable rather than becoming mutable once the object arrives in C#.
 
-        public static async Task<IEnumerable<T>> QueryAsListMappedAsync<T>(this MySqlConnection connection, CommandDefinition commandDefinition)
+        public static async Task<IEnumerable<T>> QueryAsListMappedAsync<T>(this MySqlConnection connection,
+            CommandDefinition commandDefinition)
         {
             // Retrieve sql data as objects and serialize it.
             var result = await connection.QueryAsync<object>(commandDefinition);
@@ -266,8 +272,9 @@ A sample of the extension methods for mapping is included below.
             return JsonConvert.DeserializeObject<IEnumerable<T>>(serializeObject,
                 new OptionConverter()) ?? new List<T>();
         }
-        
-        public static async Task<T?> QueryFirstOrDefaultMappedAsync<T>(this MySqlConnection connection, CommandDefinition commandDefinition)
+
+        public static async Task<T?> QueryFirstOrDefaultMappedAsync<T>(this MySqlConnection connection,
+            CommandDefinition commandDefinition)
         {
             var result = await connection.QueryFirstOrDefaultAsync<object>(commandDefinition);
             var serializeObject = JsonConvert.SerializeObject(result);
@@ -291,6 +298,9 @@ A lot of issues such as the above are common sense issues and can easily be avoi
 
 So initially, refactoring existing code over to F# will be slower for those transitioning from object oriented design.
 
+## Unit Tests
+Some basic unit testing was introduced to verify the functionality. The testing approach itself is pretty easy since everything is decomposed.
+![1](./img/tests.png)
 
 ## Conclusion
 This article has only really touched upon issues and approaches towards refactoring C# to F#. However it should hopefully give an idea of the immense benefits that F# offers to existing dotnet projects. Everything from LINQ to C# 9.0's records borrow heavily from functional programming in general so the huge benefit that F# offers is you are also able to offer such functionality as immutability to legacy projects that don't necessarily support C# 9.0.
