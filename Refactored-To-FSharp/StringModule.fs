@@ -11,6 +11,5 @@ module StringModule =
     let validateIsbn(isbn: string): string =
         validateString isbn |> ignore
         match (String.length (isbn.Replace("-", "")) ) with
-        | 13 -> isbn
-        | 10 -> isbn
+        | 13 | 10 -> isbn
         | _ -> raise (ArgumentException("Isbn is invalid"))

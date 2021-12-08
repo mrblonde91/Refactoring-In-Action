@@ -95,7 +95,7 @@ The above is pretty much the most basic way of handling strings. It throws if it
 
     let validateString candidate =
             if String.IsNullOrWhiteSpace candidate
-            then raise (ArgumentException( "String can cannot be empty"))
+            then raise (ArgumentException( "String cannot be empty"))
             else candidate
 
 So F# does require a slightly custom approach to verifying that a string is populated. In this case, I have introduced a basic null or white space check. It'll throw in the event of the value being null or whitespace.
@@ -121,11 +121,10 @@ The null or whitespace checks are omitted but the logic is pretty self explanato
     let validateIsbn(isbn: string): string =
         validateString isbn |> ignore
         match (String.length (isbn.Replace("-", "")) ) with
-        | 13 -> isbn
-        | 10 -> isbn
+        | 13 | 10 -> isbn
         | _ -> raise (ArgumentException("Isbn is invalid"))
 
-So in this case we take advantage of a match condition which allows for pattern matching. So we throw in any scenario where it doesn't match 10 or 13. 
+So in this case we take advantage of a match expression which allows for pattern matching. So we throw in any scenario where it doesn't match 10 or 13. It is a bit lengthier but it allows for far more complex branching of the conditions in a clear way. 
 
 Another example of the use of it is for the page count and verifying the page count is greater than zero. We can use a match for a more concise and clear representation of the validation in F#.  
 
