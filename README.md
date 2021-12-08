@@ -99,7 +99,7 @@ The above is pretty much the most basic way of handling strings. It throws if it
             if String.IsNullOrWhiteSpace candidate
             then invalidArg(nameof candidate) ""
 
-So F# does require a slightly custom approach to verifying that a string is populated. In this case, I have introduced a basic null or white space check. It'll throw in the event of the value being null or whitespace.
+In this case, I have introduced a basic null or white space check. It'll throw in the event of the value being null or whitespace.
 
             Author = ValidationModule.validateString author
             Name = ValidationModule.validateString name
@@ -112,6 +112,10 @@ The ISBN scenario requires some more checks. Eg it should only be 10 or 13 chara
 
 #### C# example
 
+        if (string.IsNullOrWhiteSpace(isbn))
+        {
+            throw new ArgumentException("Isbn must be populated");
+        }
         var strippedIsbn = isbn.Replace("-", "");
         return isbn.Length == 13 || isbn.Length == 10;
 
@@ -131,11 +135,10 @@ Another example of the use of it is for the page count and verifying the page co
 
 #### F# example
     let (|GreaterThanZero|_|) a = if a > 0 then Some() else None
-    ...
-    PageCount =
+    let validatePageCount(pageCount: int): unit =
         match pageCount with
-        | GreaterThanZero -> pageCount
-        | _ -> raise (ArgumentException( "Must be greater than 0 pages")
+                        | GreaterThanZero -> ()
+                        | _ -> invalidArg(nameof pageCount) "Must be greater than 0 pages" 
 
 As this all comes together, we end up with the following mapper.
 
@@ -294,7 +297,7 @@ A different mindset needs to be applied to F#. It is possible to write F# in a w
 
 However the most insulting part of this code is impurity. This is a somewhat stupid example but we have enabled the mutation of the `bookCollection`. The back pipe `<-` has been utilised to mutate it. However we have made the function `impure` and have potentially introduced impurity into other functions that rely on that collection. In the original version, the result of the function was always predictable, however the out of scope `bookCollection` has introduced potential side effects.
 
-A lot of issues such as the above are common sense issues and can easily be avoided by not enabling things like mutation. `Purity` is a key concept to functional programming in general, if a function receives the same argument, the result should always be predictable. Some parts of moving one's thought process from object oriented to functional concepts is a hurdle. It is possible to write F# like C# however much of time things like for loops or if-else conditions are simply unnecessary.
+A lot of issues such as the above are common sense issues and can easily be avoided by not enabling things like mutation. `Purity` is a key concept to functional programming in general, if a function receives the same argument, the result should always be predictable. Some parts of moving one's thought process from object oriented to functional concepts are a hurdle. It is possible to write F# like C# however much of time things like for loops or if-else conditions are simply unnecessary.
 
 So initially, refactoring existing code over to F# will be slower for those transitioning from object oriented design.
 
@@ -305,4 +308,4 @@ Some basic unit testing was introduced to verify the functionality. The testing 
 ## Conclusion
 This article has only really touched upon issues and approaches towards refactoring C# to F#. However it should hopefully give an idea of the immense benefits that F# offers to existing dotnet projects. Everything from LINQ to C# 9.0's records borrow heavily from functional programming in general so the huge benefit that F# offers is you are also able to offer such functionality as immutability to legacy projects that don't necessarily support C# 9.0.
 
-Interoperability can admittedly be unpredictable at times. Eg the immutability issue with CliMutable. However as demonstrated, it is reasonably straight forward to achieve it with some experimentation. With immutability, we gain  the advntage of pure code. Unexpected side effects such as our end results varying are bypassed. Plus it's incredibly concise and can easily be integrated into existing C# code. The biggest hurdle is transitioning from object oriented thinking to functional. When closely abiding by functional principles, it is possible to write code that is clear and self explanatory.
+Interoperability can admittedly be unpredictable at times. Eg the immutability issue with CliMutable. However as demonstrated, it is  straightforward to achieve it with some experimentation. With immutability, we gain  the advntage of pure code. Unexpected side effects such as our end results varying are bypassed. Plus it's incredibly concise and can easily be integrated into existing C# code. The biggest hurdle is transitioning from object oriented thinking to functional. When closely abiding by functional principles, it is possible to write code that is clear and self explanatory.

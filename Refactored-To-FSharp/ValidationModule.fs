@@ -18,4 +18,4 @@ module ValidationModule =
     let validatePageCount(pageCount: int): unit =
         match pageCount with
                         | GreaterThanZero -> ()
-                        | _ -> raise (invalidArg(nameof pageCount) "Must be greater than 0 pages") 
+                        | _ -> invalidArg(nameof pageCount) "Must be greater than 0 pages" 
